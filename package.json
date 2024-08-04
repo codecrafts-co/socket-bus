@@ -1,0 +1,42 @@
+{
+    "name": "@code-crafts/socket-bus",
+    "version": "1.0.0",
+    "description": "",
+    "author": "Khan Cirhan",
+    "types": "build/src/index.d.ts",
+    "files": [
+        "*.md",
+        "build"
+    ],
+    "exports": {
+        ".": "./build/src/index.js"
+    },
+    "scripts": {
+        "dev": "nodemon playground.ts",
+        "build": "npx tsc --p ./tsconfig.build.json",
+        "prepublishOnly": "npm run build",
+        "npmPublish": "npm publish --access public"
+    },
+    "keywords": [
+        "nodejs",
+        "socket",
+        "event-bus",
+        "socket-event-bus",
+        "socket.io"
+    ],
+    "license": "ISC",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/codecrafts-co/socket-bus.git"
+    },
+    "devDependencies": {
+        "@types/node": "^20.12.12",
+        "nodemon": "^3.1.4",
+        "socket.io-client": "^4.7.5",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.4.5"
+    },
+    "dependencies": {
+        "socket.io": "^4.7.5"
+    }
+}
