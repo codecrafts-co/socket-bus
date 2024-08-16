@@ -1,6 +1,6 @@
 {
     "name": "@code-crafts/socket-bus",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "",
     "author": "Khan Cirhan",
     "types": "build/src/index.d.ts",
