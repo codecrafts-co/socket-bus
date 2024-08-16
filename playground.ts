@@ -1,7 +1,7 @@
 import { SocketBus } from './src/main/socket-bus';
 import { io } from 'socket.io-client';
 
-const socketBus = new SocketBus();
+const socketBus = new SocketBus({ authenticationType: 'keyAndSecret', auth: { key: '1', secret: '1' } });
 
 const port = 4000;
 
@@ -12,7 +12,13 @@ socketBus.listen(port, () => {
 const socketBusUri = `http://localhost:${port}`;
 
 setTimeout(() => {
-    const socket = io(socketBusUri, { withCredentials: true });
+    const socket = io(socketBusUri, {
+        withCredentials: true,
+        auth: {
+            authKey: '1',
+            authSecret: '1',
+        },
+    });
 
     socket.on('connect', () => {
         console.log('Socket client connected to server.');
@@ -24,6 +30,10 @@ setTimeout(() => {
 
     socket.on('connect', () => {
         console.log('Socket client connected to server.', socket.id);
+    });
+
+    socket.on('connect_error', (err) => {
+        console.error('Connection error:', err.message);
     });
 
     setTimeout(() => {

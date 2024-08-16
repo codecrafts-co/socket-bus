@@ -2,7 +2,13 @@ import { createServer, Server as HttpServer } from 'http';
 import { Socket, Server as SocketServer, ServerOptions as SocketServerOptions } from 'socket.io';
 import { logger, SocketList } from '../utils';
 
-interface SocketBusOptions extends Partial<SocketServerOptions> {}
+interface SocketBusOptions extends Partial<SocketServerOptions> {
+    authenticationType?: 'none' | 'keyAndSecret';
+    auth?: {
+        key: string;
+        secret: string;
+    };
+}
 
 const defaultSocketBusOptions: SocketBusOptions = {
     cors: {
@@ -15,12 +21,14 @@ const defaultSocketBusOptions: SocketBusOptions = {
         // whether to skip middlewares upon successful recovery
         skipMiddlewares: true,
     },
+    authenticationType: 'none',
 };
 
 export class SocketBus {
     private httpServer: HttpServer;
     private socketServer: SocketServer;
     private socketList: SocketList;
+    private options: SocketBusOptions;
 
     constructor(options: SocketBusOptions = defaultSocketBusOptions) {
         this.httpServer = createServer();
@@ -29,10 +37,16 @@ export class SocketBus {
 
         this.socketList = new SocketList();
 
+        this.options = options;
+
         this.init();
     }
 
     private init() {
+        if (this.options.authenticationType === 'keyAndSecret') {
+            this.socketServer.use(this.authKeyAndSecretAuthentication.bind(this));
+        }
+
         this.socketServer.on('connection', (socket) => {
             this.onSocketConnect(socket);
 
@@ -46,14 +60,29 @@ export class SocketBus {
         });
     }
 
+    private authKeyAndSecretAuthentication(socket: Socket, next: (err?: Error) => void) {
+        const { authKey, authSecret } = socket.handshake.auth;
+
+        if (!authKey || !authSecret) {
+            return next(new Error('Authentication error: Missing authKey or authSecret'));
+        }
+
+        // Validate authKey and authSecret
+        if (authKey !== this.options.auth?.key || authSecret !== this.options.auth?.secret) {
+            return next(new Error('Authentication error: Invalid authKey or authSecret'));
+        }
+
+        next(); // Allow the connection
+    }
+
     private onSocketConnect(socket: Socket) {
         if (socket.handshake.query.groupId) {
             // If the connecting socket has a groupId, add the socket to that group
-            logger.log(`New Socket connected. SocketId:${socket.id} - GroupId:${socket.handshake.query.groupId}.`);
+            logger.log(`New Socket connected - [SocketId]:${socket.id}, [GroupId]:${socket.handshake.query.groupId}.`);
 
             this.socketList.addToGroup(socket.handshake.query.groupId as string, socket.id);
         } else {
-            logger.log(`New Socket connected. SocketId:${socket.id}.`);
+            logger.log(`New Socket connected - [SocketId]:${socket.id}.`);
 
             this.socketList.add(socket.id);
         }
@@ -67,11 +96,11 @@ export class SocketBus {
 
     private onSocketDisconnect(socket: Socket) {
         if (socket.handshake.query.groupId) {
-            logger.warn(`Socket disconnected. SocketId:${socket.id} - GroupId:${socket.handshake.query.groupId}`);
+            logger.warn(`Socket disconnected - [SocketId]:${socket.id}, [GroupId]:${socket.handshake.query.groupId}`);
 
             this.socketList.deleteFromGroup(socket.handshake.query.groupId as string, socket.id);
         } else {
-            logger.warn(`Socket disconnected. SocketId:${socket.id}`);
+            logger.warn(`Socket disconnected - [SocketId]:${socket.id}`);
 
             this.socketList.delete(socket.id);
         }
