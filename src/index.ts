@@ -1,1 +1,2 @@
-export * from './main/socket-bus';
+export * from './broker/socket-broker';
+export * from './client/socket-client';

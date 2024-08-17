@@ -2,7 +2,7 @@ import { createServer, Server as HttpServer } from 'http';
 import { Socket, Server as SocketServer, ServerOptions as SocketServerOptions } from 'socket.io';
 import { logger, SocketList } from '../utils';
 
-interface SocketBusOptions extends Partial<SocketServerOptions> {
+export interface SocketBrokerOptions extends Partial<SocketServerOptions> {
     authenticationType?: 'none' | 'keyAndSecret';
     auth?: {
         key: string;
@@ -10,7 +10,7 @@ interface SocketBusOptions extends Partial<SocketServerOptions> {
     };
 }
 
-const defaultSocketBusOptions: SocketBusOptions = {
+const defaultSocketBrokerOptions: SocketBrokerOptions = {
     cors: {
         origin: '*',
         credentials: true,
@@ -24,26 +24,30 @@ const defaultSocketBusOptions: SocketBusOptions = {
     authenticationType: 'none',
 };
 
-export class SocketBus {
+export class SocketBroker {
     private httpServer: HttpServer;
     private socketServer: SocketServer;
     private socketList: SocketList;
-    private options: SocketBusOptions;
+    private authenticationType: SocketBrokerOptions['authenticationType'];
+    private auth: SocketBrokerOptions['auth'];
 
-    constructor(options: SocketBusOptions = defaultSocketBusOptions) {
+    constructor(options: SocketBrokerOptions = defaultSocketBrokerOptions) {
+        const { authenticationType, auth, ...rest } = options;
+
         this.httpServer = createServer();
 
-        this.socketServer = new SocketServer(this.httpServer, options);
+        this.socketServer = new SocketServer(this.httpServer, { ...rest });
 
         this.socketList = new SocketList();
 
-        this.options = options;
+        this.authenticationType = authenticationType;
+        this.auth = auth;
 
         this.init();
     }
 
     private init() {
-        if (this.options.authenticationType === 'keyAndSecret') {
+        if (this.authenticationType === 'keyAndSecret') {
             this.socketServer.use(this.authKeyAndSecretAuthentication.bind(this));
         }
 
@@ -68,7 +72,7 @@ export class SocketBus {
         }
 
         // Validate authKey and authSecret
-        if (authKey !== this.options.auth?.key || authSecret !== this.options.auth?.secret) {
+        if (authKey !== this.auth?.key || authSecret !== this.auth?.secret) {
             return next(new Error('Authentication error: Invalid authKey or authSecret'));
         }
 
@@ -78,11 +82,11 @@ export class SocketBus {
     private onSocketConnect(socket: Socket) {
         if (socket.handshake.query.groupId) {
             // If the connecting socket has a groupId, add the socket to that group
-            logger.log(`New Socket connected - [SocketId]:${socket.id}, [GroupId]:${socket.handshake.query.groupId}.`);
+            logger.log(`Socket connected - [SocketId]:${socket.id}, [GroupId]:${socket.handshake.query.groupId}.`);
 
             this.socketList.addToGroup(socket.handshake.query.groupId as string, socket.id);
         } else {
-            logger.log(`New Socket connected - [SocketId]:${socket.id}.`);
+            logger.log(`Socket connected - [SocketId]:${socket.id}.`);
 
             this.socketList.add(socket.id);
         }

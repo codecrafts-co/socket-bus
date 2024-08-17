@@ -1,6 +1,5 @@
 export class SocketList {
-    // { [groupId: string]: { pointer: number; sockets: Set<string> } }
-    private socketGroupMap: Record<string, { pointer: number; sockets: Set<string> }>;
+    private socketGroupMap: Record<string, { pointer: number; sockets: Set<string> }>; // { [groupId: string]: { pointer: number; sockets: Set<string> } }
     private nonGroupSocketSet: Set<string>;
 
     constructor() {

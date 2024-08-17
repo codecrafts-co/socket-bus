@@ -1,18 +1,18 @@
-import { SocketBus } from './src/main/socket-bus';
-import { io } from 'socket.io-client';
+import { SocketBroker } from './src/broker/socket-broker';
+import { SocketClient } from './src/client/socket-client';
 
-const socketBus = new SocketBus({ authenticationType: 'keyAndSecret', auth: { key: '1', secret: '1' } });
+const socketBroker = new SocketBroker({ authenticationType: 'keyAndSecret', auth: { key: '1', secret: '1' } });
 
 const port = 4000;
 
-socketBus.listen(port, () => {
+socketBroker.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
 
-const socketBusUri = `http://localhost:${port}`;
+const socketBrokerUri = `http://localhost:${port}`;
 
 setTimeout(() => {
-    const socket = io(socketBusUri, {
+    new SocketClient(socketBrokerUri, {
         withCredentials: true,
         auth: {
             authKey: '1',
@@ -20,21 +20,27 @@ setTimeout(() => {
         },
     });
 
-    socket.on('connect', () => {
-        console.log('Socket client connected to server.');
-    });
+    // socketClient.on('connect', () => {
+    //     console.log('Socket client connected to server.');
+    // });
 }, 1000);
 
 setTimeout(() => {
-    const socket = io(socketBusUri, { withCredentials: true });
-
-    socket.on('connect', () => {
-        console.log('Socket client connected to server.', socket.id);
+    const socket = new SocketClient(socketBrokerUri, {
+        withCredentials: true,
+        auth: {
+            authKey: '1',
+            authSecret: '1',
+        },
     });
 
-    socket.on('connect_error', (err) => {
-        console.error('Connection error:', err.message);
-    });
+    // socket.on('connect', () => {
+    //     console.log('Socket client connected to server.', socket.id);
+    // });
+
+    // socket.on('connect_error', (err) => {
+    //     console.error('Connection error:', err.message);
+    // });
 
     setTimeout(() => {
         socket.disconnect();
@@ -42,7 +48,7 @@ setTimeout(() => {
 }, 2000);
 
 setTimeout(() => {
-    const socket = io(socketBusUri, { withCredentials: true });
+    const socket = new SocketClient(socketBrokerUri, { withCredentials: true });
 
     socket.on('connect', () => {
         console.log('Socket client connected to server.', socket.id);
@@ -50,7 +56,7 @@ setTimeout(() => {
 }, 3000);
 
 setTimeout(() => {
-    const socket = io(socketBusUri, { withCredentials: true, query: { groupId: 'ConsumerGroup1' } });
+    const socket = new SocketClient(socketBrokerUri, { withCredentials: true, query: { groupId: 'ConsumerGroup1' } });
 
     socket.on('connect', () => {
         console.log('Socket client connected to server.', socket.id);
@@ -58,7 +64,7 @@ setTimeout(() => {
 }, 4000);
 
 setTimeout(() => {
-    const socket = io(socketBusUri, { withCredentials: true, query: { groupId: 'ConsumerGroup1' } });
+    const socket = new SocketClient(socketBrokerUri, { withCredentials: true, query: { groupId: 'ConsumerGroup1' } });
 
     socket.on('connect', () => {
         console.log('Socket client connected to server.', socket.id);
