@@ -15,8 +15,8 @@ setTimeout(() => {
     new SocketClient(socketBrokerUri, {
         withCredentials: true,
         auth: {
-            authKey: '1',
-            authSecret: '1',
+            key: '1',
+            secret: '1',
         },
     });
 
@@ -29,8 +29,8 @@ setTimeout(() => {
     const socket = new SocketClient(socketBrokerUri, {
         withCredentials: true,
         auth: {
-            authKey: '1',
-            authSecret: '1',
+            key: '1',
+            secret: '1',
         },
     });
 

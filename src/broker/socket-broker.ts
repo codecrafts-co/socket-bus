@@ -65,14 +65,14 @@ export class SocketBroker {
     }
 
     private authKeyAndSecretAuthentication(socket: Socket, next: (err?: Error) => void) {
-        const { authKey, authSecret } = socket.handshake.auth;
+        const { key, secret } = socket.handshake.auth;
 
-        if (!authKey || !authSecret) {
+        if (!key || !secret) {
             return next(new Error('Authentication error: Missing authKey or authSecret'));
         }
 
         // Validate authKey and authSecret
-        if (authKey !== this.auth?.key || authSecret !== this.auth?.secret) {
+        if (key !== this.auth?.key || secret !== this.auth?.secret) {
             return next(new Error('Authentication error: Invalid authKey or authSecret'));
         }
 
