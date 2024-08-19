@@ -1,3 +1,3 @@
 
-# @code-crafts/socket-bus
+# @hyperflake/socket-broker
 
